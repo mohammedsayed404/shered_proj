@@ -1,0 +1,303 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
+  <title>المواقع السياحيه في جمهورية مصر العربيه</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
+  <script src="https://js.arcgis.com/4.29/"></script>
+
+  <style>
+    html,
+    body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      .esri-popup--is-docked-top-right .esri-popup__main-container {
+        max-height: 100%;
+      }
+
+      #appContainer {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        width: 100%;
+      }
+
+      #viewDiv {
+        flex: 1;
+        width: 100%;
+      }
+
+      .container {
+        display: flex;
+        flex: 1;
+        width: 100%;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 45px;
+        height: 22px;
+        vertical-align: middle;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        -webkit-transition: 0.4s;
+        transition: 0.4s;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 1px;
+        background-color: white;
+        -webkit-transition: 0.4s;
+        transition: 0.4s;
+      }
+
+      input:checked + .slider {
+        background-color: #2196f3;
+      }
+
+      input:focus + .slider {
+        box-shadow: 0 0 1px #2196f3;
+      }
+
+      input:checked + .slider:before {
+        -webkit-transform: translateX(20px);
+        -ms-transform: translateX(20px);
+        transform: translateX(20px);
+      }
+
+      /* Rounded sliders */
+
+      .slider.round {
+        border-radius: 20px;
+      }
+
+      .slider.round:before {
+        border-radius: 50%;
+      }
+
+      .labelText {
+        padding-left: 5px;
+        font-size: 15px;
+      }
+
+      #mainDiv {
+        padding: 8px;
+      }
+  </style>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/layers/FeatureLayer",
+      "esri/widgets/FeatureTable",
+      "esri/config",
+      "esri/widgets/Expand",
+      "esri/widgets/BasemapGallery",
+       "esri/core/reactiveUtils",
+       "esri/widgets/Search"
+    ], (Map, MapView, FeatureLayer, FeatureTable, esriConfig,Expand, BasemapGallery, reactiveUtils,Search) => {
+
+      let featureLayer;
+      const features = [];
+      esriConfig.apiKey = "AAPK68317560676e48a7a9a3a0382e8a2b63EaOmv1IuJY_DLYgcIz1qXcrgAS6H8hpi6dcoJ0Ta_zQqtju5IfLgMY9ItWVS4Sxk";
+      const map = new Map({
+        basemap: "streets-navigation-vector"
+      });
+
+      const view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [32.172378, 26.994181],
+        zoom: 5,
+        popup: {
+          autoOpenEnabled: true
+        } //disable popups
+      });
+
+       
+
+      const basemapGallery = new BasemapGallery({
+          view: view,
+          container: document.createElement("div")
+        });
+
+        const searchWidget = new Search({
+          view:view
+        });
+        view.ui.add(searchWidget, {
+          position: "top-right"
+        });
+
+        const bgExpand = new Expand({
+          view: view,
+          content: basemapGallery
+        });
+
+        view.ui.add(bgExpand, "top-left");
+
+      
+
+      view.when(() => {
+        featureLayer = new FeatureLayer({
+          portalItem: {
+            id: "f9368c2f884a44078c52cbf7000cde8a",
+            outFields: ["*"],
+        popupTemplate: {
+          title: "{UseType}",
+          content: "Description: {UseDescription}. Land value: {Roll_LandValue}"
+        },
+        definitionExpression: "1=0"
+          },
+          outFields: ["*"],
+          title: "هذا الجدول يستعرض المواقع السياحيه في جمهورية مصر العربيه",
+          popupTemplate: {  // Add popup template here
+            title: "{Name} ",
+            content: [
+              {
+                type: "fields",
+                fieldInfos: [
+                  {
+                    fieldName: "Name",
+                    label: "Name"
+                  },
+                  {
+                    fieldName: "FolderPath",
+                    label: "Folder Path"
+                  },
+                  {
+                    fieldName: "Info",
+                    label: "Info"
+                  },
+                  {
+                    fieldName: "Hiperlinke",
+                    label: "URL"
+                  },
+                  {
+                    fieldName: "Arrest",
+                    label: "Arrest"
+                  },
+                  {
+                    fieldName: "incident_date",
+                    label: "Date of Incident"
+                  },
+                  {
+                    fieldName: "Case_Number",
+                    label: "Case No."
+                  }
+                ]
+              }
+            ]
+          }
+        });
+        map.add(featureLayer);
+
+        // Create the feature table
+        const featureTable = new FeatureTable({
+          view: view,
+          layer: featureLayer,
+          multiSortEnabled: true,
+          editingEnabled: true,
+          tableTemplate: {
+            columnTemplates: [
+              {
+                type: "group",
+                label: "المواقع السياحيه",
+                columnTemplates: [
+                  {
+                    type: "field",
+                    fieldName: "Name",
+                    label: "الاسم"
+                  },
+                  {
+                    type: "field",
+                    fieldName: "FolderPath",
+                    label: "التصنيف"
+                  },
+                  {
+                    type: "field",
+                    fieldName: "Info",
+                    label: "الوصف"
+                  },
+                  {
+                    type: "field",
+                    fieldName: "Hiperlinke",
+                    label: "URL"
+                  }
+                ]
+              }
+            ]
+          },
+          container: document.getElementById("tableDiv")
+          
+        });
+        view.ui.add(document.getElementById("mainDiv"), "top-right");
+
+// Get reference to div elements
+const checkboxEle = document.getElementById("checkboxId");
+const labelText = document.getElementById("labelText");
+
+// Listen for when toggle is changed, call toggleFeatureTable function
+checkboxEle.onchange = () => {
+  toggleFeatureTable();
+};
+
+function toggleFeatureTable() {
+  // Check if the table is displayed, if so, toggle off. If not, display.
+  if (!checkboxEle.checked) {
+    document.getElementById("tableContainer").style.display = "none";
+    labelText.innerHTML = "Show Feature Table";
+  } else {
+    document.getElementById("tableContainer").style.display = "block";
+    labelText.innerHTML = "Hide Feature Table";
+  }
+}
+
+      });
+      
+    });
+    </script>
+  </head>
+  <body>
+    <div id="appContainer">
+      <div id="viewDiv"></div>
+      <div id="tableContainer" class="container">
+        <div id="tableDiv"></div>
+      </div>
+      <div id="mainDiv" class="esri-widget">
+        <label class="switch">
+          <input id="checkboxId" type="checkbox" checked="yes" />
+          <span class="slider round"></span>
+        </label>
+        <label class="labelText" id="labelText">Hide feature table</label>
+      </div>
+    </div>
+  </body>
+  </body>
+</html>
